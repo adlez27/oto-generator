@@ -1,4 +1,4 @@
-# oto-generator
+# OTO Generator
 Things both versions can do
 - generate aliases arpasing-style from index.csv
 - add suffixes
