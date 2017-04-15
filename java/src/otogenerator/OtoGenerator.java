@@ -71,20 +71,16 @@ public class OtoGenerator {
 	 * 
 	 * If startEnd is true, starting/ending aliases (like [- k]) are included
 	 * If replace is true, aliases are replaced according to replace.csv
-	 * If dup is -1, delete duplicate aliases.
-	 * If dup is 1, number duplicate aliases.
-	 * If dup is 0, do nothing with duplicates.
+	 * maxDups is the maximum number of duplicate aliases
+	 * 		(set to 0 to delete all duplicates)
 	 */
-	public void generateOto(boolean startEnd, boolean replace, int dup){
+	public void generateOto(boolean startEnd, boolean replace, int maxDups){
 		generateAliases(startEnd);
 		
 		if (replace)
 			replaceAliases();
 		
-		if (dup == -1)
-			deleteDuplicates();
-		else if (dup == 1)
-			numberDuplicates();
+		handleDuplicates(maxDups);
 		
 		exportOto();
 	}
@@ -137,39 +133,22 @@ public class OtoGenerator {
 	}
 	
 	/* Goes through the oto arraylist
-	 * Makes a temporary hashmap that counts occurrences of every alias
-	 * If the alias of a line isn't in the hashmap, add it with a count of 0
-	 * If the alias IS in the hashmap, increment hashmap value and remove line from oto
-	 */
-	private void deleteDuplicates(){
-		HashMap<String,Integer> aliasCount = new HashMap<String,Integer>();
-		int counter = 0;
-		while (counter < oto.size()){
-			String[] line = oto.get(counter);
-			if (aliasCount.containsKey(line[1])){
-				aliasCount.replace(line[1],aliasCount.get(line[1])+1);
-				oto.remove(counter);
-			} else {
-				aliasCount.put(line[1],0);
-				counter++;
-			}
-		}
-	}
-	
-	/* Goes through the oto arraylist
 	 * Makes a temporary hashmap that counts occurences of every alias
 	 * If the alias of a line isn't in the hashmap, add it with a count of 0
-	 * If the alias IS in the hashmap, increment hashmap value and 
-	 * append the number to the alias
+	 * If the alias IS in the hashmap, check if the current number of duplicates
+	 * is less than the maximum
+	 * If less, append duplicate number to the alias. If more, delete line
 	 */
-	private void numberDuplicates(){
+	private void handleDuplicates(int maxDups){
 		HashMap<String,Integer> aliasCount = new HashMap<String,Integer>();
 		int counter = 0;
 		while (counter < oto.size()){
 			String[] line = oto.get(counter);
-			if (aliasCount.containsKey(line[1])){
+			if (aliasCount.containsKey(line[1]) && aliasCount.get(line[1]) < maxDups){
 				aliasCount.replace(line[1],aliasCount.get(line[1])+1);
 				line[1] += aliasCount.get(line[1]);
+			} else if (aliasCount.containsKey(line[1]) && aliasCount.get(line[1]) >= maxDups) {
+				oto.remove(counter);
 			} else {
 				aliasCount.put(line[1],0);
 				counter++;
