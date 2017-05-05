@@ -4,16 +4,15 @@ import java.io.*;
 import java.util.*;
 
 public class OtoGenerator {
-	private HashMap<String,String[]> indexDict;
-	private HashMap<String,String> replaceDict;
-	private ArrayList<String[]> oto;
-	private String suffix, cons, cutoff, preutt, overlap;
-	private int offset, offInc;
+	private static HashMap<String,String[]> indexDict;
+	private static HashMap<String,String> replaceDict;
+	private static ArrayList<String[]> oto;
+	private static String suffix, cons, cutoff, preutt, overlap;
+	private static int offset, offInc;
 	
 	/* A GUI would have all the text fields, options, etc.
-	 * When a "generate oto" button is pressed in the GUI
-	 * it instantiates an OtoGenerator object and passes 
-	 * the csv files and the oto parameters.
+	 * When a "generate oto" button is pressed in the GUI,
+	 * it calls these methods and passes these parameters:
 	 * 
 	 * CSV Files
 	 * indexFile should be ./csv/index.csv
@@ -27,9 +26,15 @@ public class OtoGenerator {
 	 * String: Cutoff
 	 * String: Preutterance
 	 * String: Overlap
+	 * 
+	 * If startEnd is true, starting/ending aliases (like [- k]) are included
+	 * If replace is true, aliases are replaced according to replace.csv
+	 * maxDups is the maximum number of duplicate aliases
+	 * 		(set to 0 to delete all duplicates)
 	 */
-	public OtoGenerator(File indexFile, File replaceFile,
-						String suf, int of, int ofi, String co, String cu, String p, String ov){
+	public static void generateOto(File indexFile, File replaceFile,
+								   String suf, int of, int ofi, String co, String cu, String p, String ov,
+								   boolean startEnd, boolean replace, int maxDups){
 		indexDict = new HashMap<String,String[]>();
 		try (BufferedReader br = new BufferedReader(new FileReader(indexFile))) {
 			
@@ -64,17 +69,7 @@ public class OtoGenerator {
 		cutoff = cu;
 		preutt = p;
 		overlap = ov;
-	}
-	
-	/* When the GUI button is pressed, it should also call this method
-	 * through the OtoGenerator object, and pass these options.
-	 * 
-	 * If startEnd is true, starting/ending aliases (like [- k]) are included
-	 * If replace is true, aliases are replaced according to replace.csv
-	 * maxDups is the maximum number of duplicate aliases
-	 * 		(set to 0 to delete all duplicates)
-	 */
-	public void generateOto(boolean startEnd, boolean replace, int maxDups){
+		
 		generateAliases(startEnd);
 		
 		if (replace)
@@ -91,7 +86,7 @@ public class OtoGenerator {
 	 * The phoneme pairs are made into a string array that represents a line of oto
 	 * The line of oto is added to the "oto" arraylist
 	 */
-	private void generateAliases(boolean startEnd){
+	private static void generateAliases(boolean startEnd){
 		Object[] reclist = indexDict.keySet().toArray();
 		for (Object line : reclist){
 			int currentOffset = offset;
@@ -125,7 +120,7 @@ public class OtoGenerator {
 	/* Goes through the oto arraylist
 	 * If the alias is a key in the replace dictionary, change it to the value
 	 */
-	private void replaceAliases(){
+	private static void replaceAliases(){
 		for (String[] line : oto){
 			if (replaceDict.containsKey(line[1]))
 				line[1] = replaceDict.get(line[1]);
@@ -139,7 +134,7 @@ public class OtoGenerator {
 	 * is less than the maximum
 	 * If less, append duplicate number to the alias. If more, delete line
 	 */
-	private void handleDuplicates(int maxDups){
+	private static void handleDuplicates(int maxDups){
 		HashMap<String,Integer> aliasCount = new HashMap<String,Integer>();
 		int counter = 0;
 		while (counter < oto.size()){
@@ -160,9 +155,9 @@ public class OtoGenerator {
 	 * Adds the suffix to all aliases
 	 * Prints the whole oto to a file in the result folder
 	 */
-	private void exportOto(){
+	private static void exportOto(){
 		try {
-            PrintWriter writer = new PrintWriter(new File("./result/oto.ini"));
+            PrintWriter writer = new PrintWriter(new File("./oto/oto.ini"));
             
             for (String[] line : oto) {
             	writer.println(line[0] + ".wav=" + line[1] + suffix + "," + line[2] + "," + line[3] + "," + line[4] + "," + line[5] + "," + line[6]);
@@ -172,14 +167,4 @@ public class OtoGenerator {
         	 ex.printStackTrace();
          }
 	}
-	
-	// Uncomment this main if you wanna test it out
-	
-	/* public static void main(String[]args){
-		File indexFile = new File("./csv/index.csv");
-		File replaceFile = new File("./csv/replace.csv");
-		OtoGenerator otogen = new OtoGenerator(indexFile, replaceFile,
-											   "_G4",100,600,"100","-500","60","30");
-		otogen.generateOto(true,true, 1);
-	}*/
 }
