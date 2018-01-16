@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.*;
 
 public class OtoGenerator {
-	private static HashMap<String,String[]> indexDict;
+	private static LinkedHashMap<String,String[]> indexDict;
 	private static HashMap<String,String> replaceDict;
 	private static ArrayList<String[]> oto;
 	private static String suffix, cons, cutoff, preutt, overlap;
@@ -35,7 +35,7 @@ public class OtoGenerator {
 	public static void generateOto(File indexFile, File replaceFile,
 								   String suf, int of, int ofi, String co, String cu, String p, String ov,
 								   boolean startEnd, boolean replace, int maxDups){
-		indexDict = new HashMap<String,String[]>();
+		indexDict = new LinkedHashMap<String,String[]>();
 		try (BufferedReader br = new BufferedReader(new FileReader(indexFile))) {
 			
 			String line;
